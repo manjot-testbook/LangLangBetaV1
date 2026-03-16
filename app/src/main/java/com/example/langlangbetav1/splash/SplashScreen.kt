@@ -77,17 +77,19 @@ fun SplashScreen(onSplashComplete: () -> Unit) {
         learnOffsetX.animateTo(0f, tween(700, easing = FastOutSlowInEasing))
         delay(550)
 
-        // 3. Red marker strikethrough + sound
-        SoundPlayer.playMarkerScribble()
+        // 3. Red marker strikethrough + pleasant two-note swoosh
+        SoundPlayer.playMarkerSwoosh()
         strikeProgress.animateTo(1f, tween(480, easing = LinearEasing))
         delay(350)
 
-        // 4. "Experience" materialises
+        // 4. "Experience" materialises — soft pop
+        SoundPlayer.playWordReveal()
         word1Alpha.animateTo(1f, tween(480, easing = FastOutSlowInEasing))
         word1OffsetX.animateTo(0f, tween(450, easing = FastOutSlowInEasing))
         delay(250)
 
-        // 5. "English" materialises
+        // 5. "English" materialises — soft pop
+        SoundPlayer.playWordReveal()
         word2Alpha.animateTo(1f, tween(480, easing = FastOutSlowInEasing))
         word2OffsetX.animateTo(0f, tween(450, easing = FastOutSlowInEasing))
         delay(1_400)

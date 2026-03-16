@@ -48,6 +48,19 @@ class SceneViewModel(application: Application) : AndroidViewModel(application) {
     private val _passedGates = mutableListOf<PassedGateRecord>()
     val passedGates: List<PassedGateRecord> get() = _passedGates.toList()
     private var gateIndexCounter = 0
+    private var consecutivePerfect = 0
+
+    /** Live list of passed gates — drives the real-time HUD. */
+    private val _passedGatesState = MutableStateFlow<List<PassedGateRecord>>(emptyList())
+    val passedGatesState: StateFlow<List<PassedGateRecord>> = _passedGatesState.asStateFlow()
+
+    /** Total number of speech gates in the loaded module. */
+    private val _totalGates = MutableStateFlow(0)
+    val totalGates: StateFlow<Int> = _totalGates.asStateFlow()
+
+    /** One-shot event for the gate-complete badge overlay. */
+    private val _gateCompleteEvent = MutableSharedFlow<GateCompleteEvent>(extraBufferCapacity = 1)
+    val gateCompleteEvent: SharedFlow<GateCompleteEvent> = _gateCompleteEvent.asSharedFlow()
 
     /**
      * One-shot event that tells the UI to launch the system permission dialog.
@@ -67,8 +80,11 @@ class SceneViewModel(application: Application) : AndroidViewModel(application) {
     fun loadModule(moduleId: String) {
         _passedGates.clear()
         gateIndexCounter = 0
+        consecutivePerfect = 0
         ScoreRepository.clear()
         SceneRepository.load(getApplication(), moduleId)
+        _totalGates.value       = SceneRepository.steps.count { it.speechGate != null }
+        _passedGatesState.value = emptyList()
         val step = SceneRepository.getFirstStep()
         startStoryQueue(step)
     }
@@ -272,19 +288,35 @@ class SceneViewModel(application: Application) : AndroidViewModel(application) {
             val pointsPerWord = when {
                 attemptNumber == 1 -> 1.00f
                 attemptNumber == 2 -> 0.75f
-                else               -> 0.50f   // floor — never below 0.5
+                else               -> 0.50f
             }
             val wordCount = gate.displayPrompt.trim().split(Regex("\\s+")).count { it.isNotBlank() }
-            _passedGates.add(
-                PassedGateRecord(
-                    stepId        = step.id,
-                    gateIndex     = ++gateIndexCounter,
-                    displayPrompt = gate.displayPrompt,
-                    attemptNumber = attemptNumber,
-                    wordCount     = wordCount,
-                    pointsPerWord = pointsPerWord,
-                )
+            val record = PassedGateRecord(
+                stepId        = step.id,
+                gateIndex     = ++gateIndexCounter,
+                displayPrompt = gate.displayPrompt,
+                attemptNumber = attemptNumber,
+                wordCount     = wordCount,
+                pointsPerWord = pointsPerWord,
             )
+            _passedGates.add(record)
+            _passedGatesState.value = _passedGates.toList()
+
+            // Track streak of consecutive 1st-attempt passes
+            consecutivePerfect = if (attemptNumber == 1) consecutivePerfect + 1 else 0
+
+            // Gate-complete badge event + pleasant sound
+            com.example.langlangbetav1.audio.SoundPlayer.playGatePass()
+            viewModelScope.launch {
+                _gateCompleteEvent.emit(
+                    GateCompleteEvent(
+                        gatePoints         = record.gatePoints,
+                        maxPoints          = record.maxPoints,
+                        attemptNumber      = attemptNumber,
+                        consecutivePerfect = consecutivePerfect,
+                    )
+                )
+            }
 
             _uiState.value = SceneUiState.Correct(step)
             viewModelScope.launch {

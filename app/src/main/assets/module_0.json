@@ -41,8 +41,8 @@
         "scene_4_host_q"
       ],
       "speech_gate": {
-        "display_prompt": "Update this prompt to match your scene dialogue.",
-        "expected_text":  "update this prompt to match your scene dialogue",
+        "display_prompt": "Hi, I don't have a reservation. I'd like a table for one, please.",
+        "expected_text":  "hi i dont have a reservation id like a table for one please",
         "idle_video":     "scene_4_idle",
         "wrong_videos":   [
           "scene_4_wrong_1",
@@ -60,8 +60,8 @@
         "scene_5"
       ],
       "speech_gate": {
-        "display_prompt": "Update this prompt to match your scene dialogue.",
-        "expected_text":  "update this prompt to match your scene dialogue",
+        "display_prompt": "I would prefer a table near the window, please.",
+        "expected_text":  "i would prefer a table near the window please",
         "idle_video":     "scene_6_idle",
         "wrong_videos":   [
           "scene_6_wrong_1",
@@ -82,8 +82,8 @@
         "scene_10"
       ],
       "speech_gate": {
-        "display_prompt": "Update this prompt to match your scene dialogue.",
-        "expected_text":  "update this prompt to match your scene dialogue",
+        "display_prompt": "Hi, are you Priya? Nice to meet you.",
+        "expected_text":  "hi are you priya nice to meet you",
         "idle_video":     "scene_11_idle",
         "wrong_videos":   []
       },

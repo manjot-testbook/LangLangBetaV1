@@ -29,7 +29,24 @@ object SoundPlayer {
     }
 
     fun playWordPop()        = play(ToneGenerator.TONE_CDMA_HIGH_SS,       90)
-    fun playMarkerScribble() = play(ToneGenerator.TONE_CDMA_ABBR_REORDER, 280)
+
+    /**
+     * Two-note ascending "swoosh" — played at the start of the marker
+     * strikethrough on the splash screen.  Suspend so it can chain delays
+     * inside a LaunchedEffect coroutine.
+     */
+    suspend fun playMarkerSwoosh() {
+        play(ToneGenerator.TONE_PROP_PROMPT, 170)  // first note — clean mid-tone
+        kotlinx.coroutines.delay(130)
+        play(ToneGenerator.TONE_PROP_ACK,    130)  // second note — softer resolve
+    }
+
+    /** Soft pop when a word materialises on screen (splash "Experience English"). */
+    fun playWordReveal()     = play(ToneGenerator.TONE_PROP_ACK,           70)
+
+    /** Pleasant double-beep when the user passes a speech gate. */
+    fun playGatePass()       = play(ToneGenerator.TONE_PROP_BEEP2,        200)
+
     fun playScoreWordPop()   = play(ToneGenerator.TONE_PROP_BEEP,          80)
     fun playGateScore()      = play(ToneGenerator.TONE_PROP_BEEP2,        180)
     fun playScoreCount()     = play(ToneGenerator.TONE_CDMA_HIGH_SS,       60)

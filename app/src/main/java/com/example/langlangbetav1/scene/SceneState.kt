@@ -3,6 +3,17 @@ package com.example.langlangbetav1.scene
 import com.example.langlangbetav1.config.SceneStep
 
 /**
+ * One-shot event emitted each time the user successfully passes a speech gate.
+ * The SceneScreen uses it to flash the gate-complete badge overlay.
+ */
+data class GateCompleteEvent(
+    val gatePoints    : Float,   // points earned this gate
+    val maxPoints     : Float,   // max possible this gate
+    val attemptNumber : Int,     // 1 = perfect, 2 = good, 3+ = needs practice
+    val consecutivePerfect: Int, // how many gates in a row at 1st attempt
+)
+
+/**
  * Complete state machine for the LangLang lesson engine.
  *
  *  ┌─────────────────────┐
