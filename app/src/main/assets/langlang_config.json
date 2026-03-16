@@ -1,0 +1,100 @@
+{
+  "_comment": "LangLang experience configuration — single source of truth.",
+  "_guide": {
+    "videos":          "Ordered list of res/raw file names (no extension) to play in sequence.",
+    "permission_gate": "Requests RECORD_AUDIO after the video sequence plays.",
+    "speech_gate":     "User must speak 'display_prompt' correctly to advance.",
+    "expected_text":   "Lowercase, no punctuation — how the speech recogniser should hear it.",
+    "idle_video":      "Loops as a boomerang while the user is preparing to speak. Place a matching '<name>_rev.mp4' in res/raw for the boomerang reverse.",
+    "wrong_videos":    "Played in order when the user answers incorrectly. Wraps around if exhausted.",
+    "next_step_id":    "ID of the next step. Omit or set to null to end the experience."
+  },
+
+  "steps": [
+
+    {
+      "_label": "Step 0 — Onboarding + mic permission gate",
+      "id": 0,
+      "videos": [
+        "onboard_intro",
+        "onboard_line1",
+        "onboard_line2",
+        "onboard_line3_mic"
+      ],
+      "permission_gate": {
+        "idle_video":      "onboard_idle",
+        "granted_videos":  ["onboard_line4_letgo", "onboard_outro"]
+      },
+      "next_step_id": 1
+    },
+
+    {
+      "_label": "Step 1 — Scenes 1-3 + host question → first speech gate",
+      "id": 1,
+      "videos": [
+        "scene_1",
+        "scene_2",
+        "scene_3",
+        "scene_4_host_q"
+      ],
+      "speech_gate": {
+        "display_prompt": "Update this prompt to match your scene dialogue.",
+        "expected_text":  "update this prompt to match your scene dialogue",
+        "idle_video":     "scene_4_idle",
+        "wrong_videos":   [
+          "scene_4_wrong_1",
+          "scene_4_wrong_2",
+          "scene_4_wrong_3"
+        ]
+      },
+      "next_step_id": 2
+    },
+
+    {
+      "_label": "Step 2 — Scene 5 → second speech gate",
+      "id": 2,
+      "videos": [
+        "scene_5"
+      ],
+      "speech_gate": {
+        "display_prompt": "Update this prompt to match your scene dialogue.",
+        "expected_text":  "update this prompt to match your scene dialogue",
+        "idle_video":     "scene_6_idle",
+        "wrong_videos":   [
+          "scene_6_wrong_1",
+          "scene_6_wrong_2",
+          "scene_6_wrong_3"
+        ]
+      },
+      "next_step_id": 3
+    },
+
+    {
+      "_label": "Step 3 — Scenes 7-10 → third speech gate",
+      "id": 3,
+      "videos": [
+        "scene_7",
+        "scene_8",
+        "scene_9",
+        "scene_10"
+      ],
+      "speech_gate": {
+        "display_prompt": "Update this prompt to match your scene dialogue.",
+        "expected_text":  "update this prompt to match your scene dialogue",
+        "idle_video":     "scene_11_idle",
+        "wrong_videos":   []
+      },
+      "next_step_id": 4
+    },
+
+    {
+      "_label": "Step 4 — Finale (auto-advances to score screen)",
+      "id": 4,
+      "videos": [
+        "scene_12"
+      ]
+    }
+
+  ]
+}
+

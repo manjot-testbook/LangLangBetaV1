@@ -1,117 +1,58 @@
 package com.example.langlangbetav1.config
 
 import android.content.Context
+import android.util.Log
+import kotlinx.serialization.json.Json
 
 /**
- * Central source of truth for the full LangLang experience.
+ * Loads and caches the full LangLang experience from
+ * [assets/langlang_config.json].
  *
- * Asset → resource name mapping
+ * ── How to customise ─────────────────────────────────────────────────────────
+ *  Everything — videos, speech prompts, idle loops, wrong-response clips,
+ *  and step order — lives in a single file:
+ *
+ *      app/src/main/assets/langlang_config.json
+ *
+ *  • Add a new step  → append an object to the "steps" array.
+ *  • Swap a video    → change the string in "videos" / "idle_video" / etc.
+ *  • Update a prompt → edit "display_prompt" and "expected_text".
+ *  • Add/remove wrong-response clips → edit the "wrong_videos" array.
+ *  • Reorder steps   → change "next_step_id" values.
+ *
+ *  Video names map 1-to-1 to files in res/raw (no extension needed).
+ *  A boomerang reverse is auto-resolved: if "idle_video" is "scene_4_idle",
+ *  place "scene_4_idle_rev.mp4" in res/raw and it activates automatically.
  * ─────────────────────────────────────────────────────────────────────────────
- *  0.1-INTRO                       → onboard_intro
- *  0.2.1-ONBOARD-Line1             → onboard_line1
- *  0.2.1-ONBOARD-Line2             → onboard_line2
- *  0.2.1-ONBOARD-Line3-ALLOW_MIC   → onboard_line3_mic
- *  0.2.1-ONBOARD-Line4-LETGO       → onboard_line4_letgo
- *  0.2.2-IDLE                      → onboard_idle  (+_rev boomerang)
- *  0.3-OUTRO                       → onboard_outro
- *  1–3                             → scene_1 … scene_3
- *  4.0.1-HostQuestion              → scene_4_host_q
- *  4.0.2-IDLE_UserResponse         → scene_4_idle   (+_rev)
- *  4.1–4.3-WrongUserResponse       → scene_4_wrong_1 … _3
- *  5                               → scene_5
- *  6-IDLE_UserResponse             → scene_6_idle   (+_rev)
- *  6.1–6.3-WrongUserResponse       → scene_6_wrong_1 … _3
- *  7–10                            → scene_7 … scene_10
- *  11-IDLE_UserResponse            → scene_11_idle  (+_rev)
- *  12                              → scene_12
- *
- * ── How to edit ──────────────────────────────────────────────────────────────
- * • Fill in the real [displayPrompt] / [expectedText] for each [SpeechGate]
- *   once you know the dialogue from the videos.
- * • Keep [expectedText] normalised: lowercase, no punctuation, single spaces.
- * • [idleVideoResName]_rev is resolved automatically — place the ffmpeg-reversed
- *   file in res/raw with the "_rev" suffix and the boomerang activates for free.
  */
 object SceneRepository {
 
-    val steps: List<SceneStep> = listOf(
+    private const val CONFIG_ASSET = "langlang_config.json"
+    private const val TAG          = "SceneRepository"
 
-        // ── Step 0 — Onboarding → mic permission gate ─────────────────────
-        // Plays intro + lines 1-3, then requests RECORD_AUDIO permission.
-        // While the system dialog shows, onboard_idle boomerangs in the bg.
-        // On GRANT  → plays line4_letgo + outro, then advances to Step 1.
-        // On DENY   → PermissionDenied overlay with "Allow Microphone" CTA.
-        SceneStep(
-            id            = 0,
-            videoResNames = listOf(
-                "onboard_intro",
-                "onboard_line1",
-                "onboard_line2",
-                "onboard_line3_mic",
-            ),
-            permissionGate = PermissionGate(
-                idleVideoResName     = "onboard_idle",
-                grantedVideoResNames = listOf("onboard_line4_letgo", "onboard_outro"),
-            ),
-            speechGate = null,
-            nextStepId = 1,
-        ),
+    private val json = Json {
+        ignoreUnknownKeys = true   // future-proof: extra JSON fields are silently skipped
+        isLenient         = true   // tolerates minor formatting issues
+    }
 
-        // ── Step 1 — Scene block 1-3 + host question → first speech gate ─
-        SceneStep(
-            id            = 1,
-            videoResNames = listOf("scene_1", "scene_2", "scene_3", "scene_4_host_q"),
-            speechGate    = SpeechGate(
-                displayPrompt         = "Update this prompt to match your scene dialogue.",
-                expectedText          = "update this prompt to match your scene dialogue",
-                idleVideoResName      = "scene_4_idle",
-                wrongResponseResNames = listOf(
-                    "scene_4_wrong_1",
-                    "scene_4_wrong_2",
-                    "scene_4_wrong_3",
-                ),
-            ),
-            nextStepId = 2,
-        ),
+    private var _steps: List<SceneStep> = emptyList()
+    val steps: List<SceneStep> get() = _steps
 
-        // ── Step 2 — Scene 5 → second speech gate ────────────────────────
-        SceneStep(
-            id            = 2,
-            videoResNames = listOf("scene_5"),
-            speechGate    = SpeechGate(
-                displayPrompt         = "Update this prompt to match your scene dialogue.",
-                expectedText          = "update this prompt to match your scene dialogue",
-                idleVideoResName      = "scene_6_idle",
-                wrongResponseResNames = listOf(
-                    "scene_6_wrong_1",
-                    "scene_6_wrong_2",
-                    "scene_6_wrong_3",
-                ),
-            ),
-            nextStepId = 3,
-        ),
-
-        // ── Step 3 — Scenes 7-10 → third speech gate ─────────────────────
-        SceneStep(
-            id            = 3,
-            videoResNames = listOf("scene_7", "scene_8", "scene_9", "scene_10"),
-            speechGate    = SpeechGate(
-                displayPrompt         = "Update this prompt to match your scene dialogue.",
-                expectedText          = "update this prompt to match your scene dialogue",
-                idleVideoResName      = "scene_11_idle",
-                wrongResponseResNames = emptyList(),
-            ),
-            nextStepId = 4,
-        ),
-
-        // ── Step 4 — Finale (auto-advance to Finished) ───────────────────
-        SceneStep(
-            id            = 4,
-            videoResNames = listOf("scene_12"),
-            speechGate    = null,
-            nextStepId    = null,
-        ),
-    )
+    /**
+     * Call once (e.g. in [MainActivity.onCreate]) before navigation starts.
+     * Reads and parses [langlang_config.json] from the assets folder.
+     */
+    fun load(context: Context) {
+        try {
+            val raw    = context.assets.open(CONFIG_ASSET).bufferedReader().use { it.readText() }
+            val config = json.decodeFromString<LangLangConfig>(raw)
+            _steps     = config.steps
+            Log.i(TAG, "Loaded ${_steps.size} step(s) from $CONFIG_ASSET")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load $CONFIG_ASSET: ${e.message}", e)
+            _steps = emptyList()
+        }
+    }
 
     fun getFirstStep(): SceneStep = steps.first()
     fun getStep(id: Int): SceneStep? = steps.find { it.id == id }
