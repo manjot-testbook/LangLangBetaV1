@@ -18,7 +18,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         SoundPlayer.init()
-        SceneRepository.load(this)
 
         enableEdgeToEdge()
         WindowCompat.setDecorFitsSystemWindows(window, false)

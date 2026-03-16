@@ -63,12 +63,13 @@ class SceneViewModel(application: Application) : AndroidViewModel(application) {
 
     // ── Public entry points ────────────────────────────────────────────────
 
-    /** Called once by the composable with the nav-arg step ID. */
-    fun loadStep(stepId: Int) {
+    /** Called once by the composable with the module ID from the nav route (e.g. "module_0"). */
+    fun loadModule(moduleId: String) {
         _passedGates.clear()
         gateIndexCounter = 0
         ScoreRepository.clear()
-        val step = SceneRepository.getStep(stepId) ?: SceneRepository.getFirstStep()
+        SceneRepository.load(getApplication(), moduleId)
+        val step = SceneRepository.getFirstStep()
         startStoryQueue(step)
     }
 

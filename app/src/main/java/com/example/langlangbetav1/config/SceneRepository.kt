@@ -27,8 +27,7 @@ import kotlinx.serialization.json.Json
  */
 object SceneRepository {
 
-    private const val CONFIG_ASSET = "langlang_config.json"
-    private const val TAG          = "SceneRepository"
+    private const val TAG = "SceneRepository"
 
     private val json = Json {
         ignoreUnknownKeys = true   // future-proof: extra JSON fields are silently skipped
@@ -39,17 +38,26 @@ object SceneRepository {
     val steps: List<SceneStep> get() = _steps
 
     /**
-     * Call once (e.g. in [MainActivity.onCreate]) before navigation starts.
-     * Reads and parses [langlang_config.json] from the assets folder.
+     * Load a module by ID.  Each module lives in assets as `<moduleId>.json`
+     * (e.g. "module_0" → assets/module_0.json, "module_1" → assets/module_1.json).
+     *
+     * Called automatically by [SceneViewModel] when a module is started, so you
+     * never need to call this manually — just navigate to "scene/module_0" (or any
+     * other moduleId) and the right JSON is loaded on the fly.
+     *
+     * To add a new module:
+     *  1. Drop `module_N.json` into app/src/main/assets/
+     *  2. Navigate to "scene/module_N" from any button / home screen.
      */
-    fun load(context: Context) {
+    fun load(context: Context, moduleId: String) {
+        val assetFile = "$moduleId.json"
         try {
-            val raw    = context.assets.open(CONFIG_ASSET).bufferedReader().use { it.readText() }
+            val raw    = context.assets.open(assetFile).bufferedReader().use { it.readText() }
             val config = json.decodeFromString<LangLangConfig>(raw)
             _steps     = config.steps
-            Log.i(TAG, "Loaded ${_steps.size} step(s) from $CONFIG_ASSET")
+            Log.i(TAG, "Loaded ${_steps.size} step(s) from $assetFile")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load $CONFIG_ASSET: ${e.message}", e)
+            Log.e(TAG, "Failed to load $assetFile: ${e.message}", e)
             _steps = emptyList()
         }
     }

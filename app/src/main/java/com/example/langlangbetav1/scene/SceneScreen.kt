@@ -63,7 +63,7 @@ import com.example.langlangbetav1.ui.theme.RedMarker
 
 @Composable
 fun SceneScreen(
-    stepId        : Int,
+    moduleId      : String,
     navController : NavController,
     viewModel     : SceneViewModel = viewModel(),
 ) {
@@ -76,7 +76,7 @@ fun SceneScreen(
         if (uiState is SceneUiState.Finished) {
             delay(900)
             navController.navigate("score") {
-                popUpTo("scene/{stepId}") { inclusive = false }
+                popUpTo("scene/{moduleId}") { inclusive = false }
             }
         }
     }
@@ -114,7 +114,7 @@ fun SceneScreen(
         }
     }
 
-    LaunchedEffect(stepId) { viewModel.loadStep(stepId) }
+    LaunchedEffect(moduleId) { viewModel.loadModule(moduleId) }
 
     Box(
         modifier = Modifier

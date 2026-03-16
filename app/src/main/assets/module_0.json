@@ -1,6 +1,7 @@
 {
   "_comment": "LangLang experience configuration — single source of truth.",
   "_guide": {
+    "module_id":       "Matches the filename (module_0 → module_0.json). Used for logging only.",
     "videos":          "Ordered list of res/raw file names (no extension) to play in sequence.",
     "permission_gate": "Requests RECORD_AUDIO after the video sequence plays.",
     "speech_gate":     "User must speak 'display_prompt' correctly to advance.",
@@ -9,6 +10,8 @@
     "wrong_videos":    "Played in order when the user answers incorrectly. Wraps around if exhausted.",
     "next_step_id":    "ID of the next step. Omit or set to null to end the experience."
   },
+
+  "module_id": "module_0",
 
   "steps": [
 

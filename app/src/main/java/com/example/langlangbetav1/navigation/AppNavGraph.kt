@@ -2,10 +2,8 @@ package com.example.langlangbetav1.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
 import com.example.langlangbetav1.scene.SceneScreen
 import com.example.langlangbetav1.score.ScoreScreen
 import com.example.langlangbetav1.splash.SplashScreen
@@ -14,7 +12,17 @@ import com.example.langlangbetav1.upi.SignupScreen
 import com.example.langlangbetav1.upi.UpiPaymentScreen
 import com.example.langlangbetav1.upi.UpiPinScreen
 
-/** Two-destination nav graph: splash → scene/{sceneId} */
+/**
+ * App nav graph.
+ *
+ * Scene route: "scene/{moduleId}"
+ *   moduleId is the base-name of the JSON file in assets, e.g.:
+ *     "module_0"  →  assets/module_0.json
+ *     "module_1"  →  assets/module_1.json   (add when ready)
+ *
+ * To launch a module from any button/screen:
+ *     navController.navigate("scene/module_1")
+ */
 @Composable
 fun AppNavGraph(navController: NavHostController) {
     NavHost(
@@ -25,20 +33,17 @@ fun AppNavGraph(navController: NavHostController) {
         composable("splash") {
             SplashScreen(
                 onSplashComplete = {
-                    navController.navigate("scene/0") {
-                        // Remove splash from the back stack so Back exits the app
+                    navController.navigate("scene/module_0") {
                         popUpTo("splash") { inclusive = true }
                     }
                 }
             )
         }
 
-        composable(
-            route     = "scene/{stepId}",
-            arguments = listOf(navArgument("stepId") { type = NavType.IntType }),
-        ) { backStackEntry ->
-            val stepId = backStackEntry.arguments?.getInt("stepId") ?: 0
-            SceneScreen(stepId = stepId, navController = navController)
+        // moduleId is a plain String — no NavType annotation needed
+        composable("scene/{moduleId}") { backStackEntry ->
+            val moduleId = backStackEntry.arguments?.getString("moduleId") ?: "module_0"
+            SceneScreen(moduleId = moduleId, navController = navController)
         }
 
         composable("score") {
