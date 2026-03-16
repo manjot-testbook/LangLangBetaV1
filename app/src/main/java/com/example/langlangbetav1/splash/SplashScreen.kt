@@ -1,16 +1,21 @@
 package com.example.langlangbetav1.splash
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,180 +24,204 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.langlangbetav1.audio.SoundPlayer
-import com.example.langlangbetav1.ui.theme.DarkBackground
-import com.example.langlangbetav1.ui.theme.RedMarker
 import kotlinx.coroutines.delay
 
+// ── Palette ───────────────────────────────────────────────────────────────────
+private val NotebookCream   = Color(0xFFFEF6E4)   // warm parchment
+private val RuleLineBlue    = Color(0xFFA8BEE0)   // classic college-rule blue
+private val MarginLineRed   = Color(0xFFE89090)   // soft red margin
+private val InkDark         = Color(0xFF1A1A2E)   // navy-black pen ink
+private val MarkerRed       = Color(0xFFCC2222)   // deep red marker
+
 /**
- * Cinematic splash screen.
+ * Splash screen — notebook aesthetic.
  *
- * Sequence (≈ 5 s):
- *  1. Background gradient fades to dark purple                    [0 – 500 ms]
- *  2. "LANGLANG" logo fades + slides in                           [400 – 1100 ms]
- *  3. "Learn English" fades in                                    [1200 – 1900 ms]
- *  4. Red marker line draws across + MARKER SOUND                 [2000 – 2600 ms]
- *  5. "Experience English" fades in                               [2700 – 3400 ms]
- *  6. Hold                                                        [3400 – 4800 ms]
- *  7. onSplashComplete()
+ * Sequence (≈ 5.5 s):
+ *  1. Cream notebook + ruled lines fade in                [0 – 600 ms]
+ *  2. "Learn English" written in dark ink fades in        [750 – 1500 ms]
+ *  3. Red marker line strikes through                     [2050 – 2530 ms]
+ *  4. "Experience" appears in red                         [2880 ms]
+ *  5. "English" appears in red                            [3390 ms]
+ *  6. Hold → onSplashComplete()                           [4800 ms]
  */
 @Composable
 fun SplashScreen(onSplashComplete: () -> Unit) {
 
     // ── Animatables ────────────────────────────────────────────────────────
-    val bgAlpha         = remember { Animatable(0f) }
-    val logoAlpha       = remember { Animatable(0f) }
-    val logoOffsetY     = remember { Animatable(30f) }
-    val learnAlpha      = remember { Animatable(0f) }
-    val strikeProgress  = remember { Animatable(0f) }
-    val experienceAlpha = remember { Animatable(0f) }
-    val taglineAlpha    = remember { Animatable(0f) }
+    val bgAlpha        = remember { Animatable(0f) }
+    val learnAlpha     = remember { Animatable(0f) }
+    val learnOffsetX   = remember { Animatable(-20f) }   // subtle slide-in from left
+    val strikeProgress = remember { Animatable(0f) }
+    val word1Alpha     = remember { Animatable(0f) }     // "Experience"
+    val word1OffsetX   = remember { Animatable(-16f) }
+    val word2Alpha     = remember { Animatable(0f) }     // "English"
+    val word2OffsetX   = remember { Animatable(-16f) }
 
     // ── Sequence ───────────────────────────────────────────────────────────
     LaunchedEffect(Unit) {
-        bgAlpha.animateTo(1f, tween(500))
-        delay(100)
+        // 1. Background + lines
+        bgAlpha.animateTo(1f, tween(600, easing = FastOutSlowInEasing))
+        delay(150)
 
-        // Logo entrance
-        logoAlpha.animateTo(1f, tween(700))
-        logoOffsetY.animateTo(0f, tween(600))
-        delay(200)
+        // 2. "Learn English" slides + fades in
+        learnAlpha.animateTo(1f, tween(750, easing = FastOutSlowInEasing))
+        learnOffsetX.animateTo(0f, tween(700, easing = FastOutSlowInEasing))
+        delay(550)
 
-        // "Learn English"
-        learnAlpha.animateTo(1f, tween(700))
-        delay(300)
-
-        // Marker strikethrough + SOUND
+        // 3. Red marker strikethrough + sound
         SoundPlayer.playMarkerScribble()
-        strikeProgress.animateTo(1f, tween(560, easing = LinearEasing))
-        delay(200)
+        strikeProgress.animateTo(1f, tween(480, easing = LinearEasing))
+        delay(350)
 
-        // "Experience English"
-        experienceAlpha.animateTo(1f, tween(700))
-        taglineAlpha.animateTo(1f, tween(600))
+        // 4. "Experience" materialises
+        word1Alpha.animateTo(1f, tween(480, easing = FastOutSlowInEasing))
+        word1OffsetX.animateTo(0f, tween(450, easing = FastOutSlowInEasing))
+        delay(250)
+
+        // 5. "English" materialises
+        word2Alpha.animateTo(1f, tween(480, easing = FastOutSlowInEasing))
+        word2OffsetX.animateTo(0f, tween(450, easing = FastOutSlowInEasing))
         delay(1_400)
 
         onSplashComplete()
     }
 
-    // ── Background ────────────────────────────────────────────────────────
-    Box(
+    // ── Root container ─────────────────────────────────────────────────────
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
-            .background(DarkBackground),
+            .background(NotebookCream),
         contentAlignment = Alignment.Center,
     ) {
-        // Radial purple glow behind the text
+        val screenH        = maxHeight
+        val screenW        = maxWidth
+        val marginLineDp   = screenW * 0.17f   // ~17% from left edge
+        val lineSpacingDp  = 34.dp             // college-ruled spacing
+
+        // ── Ruled lines + red margin ──────────────────────────────────────
         Canvas(modifier = Modifier.fillMaxSize()) {
-            drawCircle(
-                brush  = Brush.radialGradient(
-                    colors = listOf(
-                        Color(0x44430070),
-                        Color(0x00000000),
-                    ),
-                    center = Offset(size.width / 2f, size.height * 0.45f),
-                    radius = size.width * 0.75f,
-                ),
-                radius = size.width * 0.75f,
+            val a           = bgAlpha.value
+            val spacingPx   = lineSpacingDp.toPx()
+            val marginX     = marginLineDp.toPx()
+            val lineCount   = (size.height / spacingPx).toInt() + 2
+
+            // Horizontal blue rules
+            repeat(lineCount) { i ->
+                val y = i * spacingPx
+                drawLine(
+                    color       = RuleLineBlue.copy(alpha = a * 0.50f),
+                    start       = Offset(0f, y),
+                    end         = Offset(size.width, y),
+                    strokeWidth = 1.3f,
+                )
+            }
+
+            // Red vertical margin line
+            drawLine(
+                color       = MarginLineRed.copy(alpha = a * 0.80f),
+                start       = Offset(marginX, 0f),
+                end         = Offset(marginX, size.height),
+                strokeWidth = 1.8f,
+            )
+
+            // Subtle top shadow (like a spiral-bound shadow)
+            drawRect(
+                color  = Color(0x18000000),
+                topLeft = Offset(0f, 0f),
+                size   = androidx.compose.ui.geometry.Size(size.width, spacingPx * 0.6f),
             )
         }
 
-        // Content column
+        // ── Text content — starts just past the margin line ───────────────
         Column(
-            modifier            = Modifier.padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(
+                    start = marginLineDp + 18.dp,   // sit just past the margin
+                    end   = screenW * 0.08f,
+                ),
+            horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Center,
         ) {
 
-            // ── Logo / wordmark ─────────────────────────────────────────
-            Text(
-                text     = "LANGLANG",
-                modifier = Modifier
-                    .padding(bottom = 4.dp),
-                style    = TextStyle(
-                    fontSize      = 48.sp,
-                    fontWeight    = FontWeight.Black,
-                    letterSpacing = 6.sp,
-                    brush         = Brush.horizontalGradient(
-                        listOf(Color(0xFF9C47FF), Color(0xFF6200EA))
-                    ),
-                    shadow        = Shadow(Color(0x88000000), Offset(0f, 6f), 12f),
-                    textAlign     = TextAlign.Center,
-                ),
-                color    = Color.White.copy(alpha = logoAlpha.value),
-            )
-
-            Text(
-                text  = "WHERE STORIES TEACH",
-                color = Color.White.copy(alpha = taglineAlpha.value * 0.45f),
-                fontSize   = 10.sp,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 3.sp,
-                textAlign = TextAlign.Center,
-            )
-
-            Spacer(Modifier.height(56.dp))
-
-            // ── "Learn English" + red marker ────────────────────────────
-            Box(contentAlignment = Alignment.Center) {
+            // ── "Learn English" (dark ink, serif italic) ──────────────────
+            Box(contentAlignment = Alignment.CenterStart) {
                 Text(
-                    text  = "Learn English",
-                    color = Color.White.copy(alpha = learnAlpha.value),
-                    style = TextStyle(
-                        fontSize   = 34.sp,
-                        fontWeight = FontWeight.Bold,
-                        shadow     = Shadow(Color.Black.copy(0.3f), Offset(0f, 4f), 8f),
+                    text     = "Learn English",
+                    modifier = Modifier.offset(x = learnOffsetX.value.dp),
+                    color    = InkDark.copy(alpha = learnAlpha.value),
+                    style    = TextStyle(
+                        fontSize      = 38.sp,
+                        fontWeight    = FontWeight.Normal,
+                        fontFamily    = FontFamily.Serif,
+                        fontStyle     = FontStyle.Italic,
+                        letterSpacing = 0.3.sp,
                     ),
                 )
+
+                // Red marker strikethrough
                 if (strikeProgress.value > 0f) {
                     Canvas(modifier = Modifier.matchParentSize()) {
-                        val startX  = -size.width * 0.10f
-                        val endX    = size.width  * 1.10f
-                        val curEnd  = startX + (endX - startX) * strikeProgress.value
-                        // Slightly wobbly two-line marker effect
+                        val sx  = -12f
+                        val ex  = size.width + 12f
+                        val cur = sx + (ex - sx) * strikeProgress.value
+
+                        // Primary thick stroke — natural slight angle
                         drawLine(
-                            color       = RedMarker.copy(alpha = 0.85f),
-                            start       = Offset(startX, size.height * 0.53f),
-                            end         = Offset(curEnd, size.height * 0.55f),
-                            strokeWidth = 10f,
+                            color       = MarkerRed.copy(alpha = 0.90f),
+                            start       = Offset(sx,  size.height * 0.50f),
+                            end         = Offset(cur, size.height * 0.53f),
+                            strokeWidth = 14f,
                             cap         = StrokeCap.Round,
                         )
+                        // Bleed / secondary thinner stroke (marker always bleeds slightly)
                         drawLine(
-                            color       = RedMarker.copy(alpha = 0.40f),
-                            start       = Offset(startX, size.height * 0.62f),
-                            end         = Offset(curEnd, size.height * 0.64f),
-                            strokeWidth = 5f,
+                            color       = MarkerRed.copy(alpha = 0.25f),
+                            start       = Offset(sx,  size.height * 0.63f),
+                            end         = Offset(cur, size.height * 0.66f),
+                            strokeWidth = 6f,
                             cap         = StrokeCap.Round,
                         )
                     }
                 }
             }
 
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(18.dp))
 
-            // ── "Experience English" ─────────────────────────────────────
-            Text(
-                text  = "Experience English",
-                color = Color.White.copy(alpha = experienceAlpha.value),
-                style = TextStyle(
-                    fontSize   = 34.sp,
-                    fontWeight = FontWeight.Bold,
-                    brush      = Brush.horizontalGradient(
-                        listOf(Color(0xFFE0E0E0), Color(0xFF9C47FF))
+            // ── "Experience English" (red, word by word, cursive) ─────────
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    text     = "Experience",
+                    modifier = Modifier.offset(x = word1OffsetX.value.dp),
+                    color    = MarkerRed.copy(alpha = word1Alpha.value),
+                    style    = TextStyle(
+                        fontSize      = 38.sp,
+                        fontWeight    = FontWeight.Normal,
+                        fontFamily    = FontFamily.Cursive,
+                        letterSpacing = 0.sp,
                     ),
-                    shadow     = Shadow(Color.Black.copy(0.3f), Offset(0f, 4f), 8f),
-                ),
-            )
+                )
+                Text(
+                    text     = "English",
+                    modifier = Modifier.offset(x = word2OffsetX.value.dp),
+                    color    = MarkerRed.copy(alpha = word2Alpha.value),
+                    style    = TextStyle(
+                        fontSize      = 38.sp,
+                        fontWeight    = FontWeight.Normal,
+                        fontFamily    = FontFamily.Cursive,
+                        letterSpacing = 0.sp,
+                    ),
+                )
+            }
         }
     }
 }
